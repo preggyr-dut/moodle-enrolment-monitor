@@ -63,7 +63,7 @@ Create a scheduled task (cron job) to update the dashboard:
 4. Set action: Start a program
 5. Program: `python.exe`
 6. Arguments: `enrollment_monitor.py && deploy_monitor.py update`
-7. Start in: `C:\moodle_sync`
+7. Start in: `C:\moodle-enrolment-monitor`
 
 ## Manual Updates
 
@@ -76,12 +76,13 @@ python deploy_monitor.py update
 
 ## Configuration
 
-The monitor automatically finds the latest enrollment sync log files. It looks for files matching `enrolment_sync*.log` and selects the most recent one with actual processing data.
+The monitor uses the enrollment sync log file located at `C:\moodle_sync\enrolment_sync.log`. This file contains the latest processing data from Moodle enrollment synchronization.
 
 ## Files
 
-- `enrollment_monitor.py` - Generates the HTML dashboard from logs
+- `enrollment_monitor.py` - Generates the HTML dashboard from the sync log
 - `deploy_monitor.py` - Handles GitHub deployment
+- `_worker.js` - CloudFlare Pages worker script
 - `monitoring_site/index.html` - Generated dashboard
 
 ## Security Note

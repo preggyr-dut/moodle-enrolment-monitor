@@ -12,32 +12,16 @@ import subprocess
 import json
 
 class EnrollmentMonitor:
-    def __init__(self, log_dir='.', output_dir='monitoring_site'):
-        self.log_dir = Path(log_dir)
+    def __init__(self, log_file=r'C:\moodle_sync\enrolment_sync.log', output_dir='monitoring_site'):
+        self.log_file = Path(log_file)
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
 
-    def find_latest_log(self, pattern='enrolment_sync*.log'):
-        """Find the most recent enrollment sync log file with actual data."""
-        log_files = list(self.log_dir.glob(pattern))
-        if not log_files:
-            return None
-        
-        # Sort by modification time, newest first
-        log_files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
-        
-        # Try to find a log with actual processing data
-        for log_file in log_files:
-            try:
-                with open(log_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    if 'Processing:' in content and 'Sync complete:' in content:
-                        return log_file
-            except:
-                continue
-        
-        # Fallback to newest
-        return log_files[0] if log_files else None
+    def find_latest_log(self):
+        """Check if the specified log file exists and return it."""
+        if self.log_file.exists():
+            return self.log_file
+        return None
 
     def parse_log_file(self, log_file):
         """Parse the log file to extract key metrics."""

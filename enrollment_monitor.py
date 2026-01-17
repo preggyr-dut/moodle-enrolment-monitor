@@ -50,8 +50,15 @@ class EnrollmentMonitor:
 
             # Count successes and errors
             for line in lines:
-                if 'Successfully enrolled' in line or 'Enrolment successful' in line:
-                    metrics['successful'] += 1
+                if 'Successfully enrolled' in line or 'Enrolment successful' in line or 'Push complete:' in line:
+                    # Extract number from "Push complete: 464 successful, 0 failed"
+                    if 'Push complete:' in line:
+                        import re
+                        match = re.search(r'Push complete: (\d+) successful', line)
+                        if match:
+                            metrics['successful'] += int(match.group(1))
+                    else:
+                        metrics['successful'] += 1
                 elif 'Failed to' in line or 'Error' in line.lower():
                     metrics['errors'] += 1
                 elif 'Course' in line and 'not found' in line:
@@ -65,8 +72,9 @@ class EnrollmentMonitor:
 
             # Look for summary line
             for line in reversed(lines):
-                if 'Sync complete:' in line:
-                    summary_match = re.search(r'Sync complete: (\d+) successful, (\d+) errors', line)
+                if 'Sync complete' in line.lower():
+                    # Try different summary formats
+                    summary_match = re.search(r'Sync complete: (\d+) successful, (\d+) errors', line, re.IGNORECASE)
                     if summary_match:
                         metrics['successful'] = int(summary_match.group(1))
                         metrics['errors'] = int(summary_match.group(2))
@@ -101,6 +109,7 @@ class EnrollmentMonitor:
             <div class="col-12">
                 <h1 class="text-center mb-4">Moodle Enrollment Sync Monitor</h1>
                 <p class="text-center text-muted">Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+                <!-- Force redeploy: {datetime.now().strftime('%Y%m%d%H%M%S')} -->
             </div>
         </div>
 

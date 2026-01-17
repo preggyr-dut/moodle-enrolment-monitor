@@ -82,7 +82,6 @@ The monitor uses the enrollment sync log file located at `C:\moodle_sync\enrolme
 
 - `enrollment_monitor.py` - Generates the HTML dashboard from the sync log
 - `deploy_monitor.py` - Handles GitHub deployment
-- `_worker.js` - CloudFlare Pages worker script
 - `monitoring_site/index.html` - Generated dashboard
 
 ## Security Note

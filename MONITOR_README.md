@@ -5,8 +5,10 @@ A monitoring dashboard for Moodle enrollment synchronization that displays sync 
 ## Features
 
 - Real-time enrollment sync metrics
-- Success/error counts
-- Recent processing activity
+- Success/error counts with detailed breakdowns
+- Faculty and department distribution analysis
+- API error tracking and batch processing details
+- Recent processing activity and batch status
 - Responsive Bootstrap UI
 - Automatic deployment to CloudFlare Pages
 
@@ -77,6 +79,12 @@ python deploy_monitor.py update
 ## Configuration
 
 The monitor uses the enrollment sync log file located at `C:\moodle_sync\enrolment_sync.log`. This file contains the latest processing data from Moodle enrollment synchronization.
+
+The dashboard provides detailed analytics including:
+- Faculty distribution across different academic units
+- Department code breakdowns from course identifiers
+- API error tracking and batch processing status
+- Comprehensive success/error metrics
 
 ## Files
 

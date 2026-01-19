@@ -12,7 +12,7 @@ import subprocess
 import json
 
 class EnrollmentMonitor:
-    def __init__(self, log_file=r'C:\moodle_sync\enrolment_sync.log', output_dir='monitoring_site'):
+    def __init__(self, log_file=r'C:\moodle_sync\enrolment_sync.log', output_dir='.'):
         self.log_file = Path(log_file)
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)

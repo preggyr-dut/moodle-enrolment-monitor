@@ -4,7 +4,8 @@ A monitoring dashboard for Moodle enrollment synchronization that displays sync 
 
 ## Features
 
-- Real-time enrollment sync metrics
+- Real-time enrollment sync metrics from log files
+- **NEW:** Direct database analytics with day-by-day enrollment counts
 - Success/error counts with detailed breakdowns
 - Faculty and department distribution analysis
 - API error tracking and batch processing details
@@ -76,20 +77,75 @@ python enrollment_monitor.py
 python deploy_monitor.py update
 ```
 
-## Configuration
+## Database Analytics Setup
 
-The monitor uses the enrollment sync log file located at `C:\moodle_sync\enrolment_sync.log`. This file contains the latest processing data from Moodle enrollment synchronization.
+### 1. Install Dependencies
 
-The dashboard provides detailed analytics including:
-- Faculty distribution across different academic units
-- Department code breakdowns from course identifiers
-- API error tracking and batch processing status
-- Comprehensive success/error metrics
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Configure Database Connection
+
+Copy the example configuration file:
+
+```bash
+cp config.example.ini config.ini
+```
+
+Edit `config.ini` with your MSSQL database credentials:
+
+```ini
+[MSSQL]
+server = your-server-name
+database = moodle
+username = your-username
+password = your-password
+port = 1433
+```
+
+Alternatively, set environment variables:
+- `MSSQL_SERVER`
+- `MSSQL_DATABASE`
+- `MSSQL_USERNAME`
+- `MSSQL_PASSWORD`
+
+### 3. Test Database Connection
+
+Run the analytics script:
+
+```bash
+python enrollment_analytics.py
+```
+
+Or use the batch file:
+```bash
+run_analytics.bat
+```
+
+### 4. Generate Combined Dashboard
+
+To create a dashboard with both sync logs and database data:
+
+```bash
+python combined_dashboard.py
+```
+
+This will generate an enhanced dashboard showing:
+- Sync log metrics (as before)
+- Real database enrollment counts by date
+- Course-specific enrollment data
+- Enrollment trends and analytics
 
 ## Files
 
-- `enrollment_monitor.py` - Generates the HTML dashboard from the sync log
+- `enrollment_monitor.py` - Generates dashboard from sync log files
+- `enrollment_analytics.py` - Queries MSSQL database for enrollment analytics
+- `combined_dashboard.py` - Creates enhanced dashboard with both log and database data
 - `deploy_monitor.py` - Handles GitHub deployment
+- `requirements.txt` - Python dependencies
+- `config.example.ini` - Database configuration template
+- `run_analytics.bat` - Windows batch file to run analytics
 - `index.html` - Generated dashboard (deployed to CloudFlare Pages)
 
 ## Security Note

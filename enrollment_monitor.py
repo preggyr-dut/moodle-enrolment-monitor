@@ -32,7 +32,7 @@ class EnrollmentMonitor:
         possible_patterns = [
             r'C:\moodle_sync\enrolment_sync.log',
             r'C:\moodle_sync\simple_enroll.log',
-            r'C:\moodle_sync\moodle_enroll_*.log',
+            r'C:\moodle_sync\src\main_scripts\moodle_enroll_*.log',
             r'C:\moodle_sync\src\main_scripts\moodle_sync_*.log',
             r'*.log'  # Current directory logs
         ]

@@ -1,705 +1,613 @@
 #!/usr/bin/env python3
 """
 Enhanced Enrollment Monitoring Dashboard Generator
-Handles both original sync logs and simple_enroll.py logs
-Generates static HTML dashboard and pushes to GitHub for CloudFlare Pages
+Handles logs from:
+- simple_enroll.py (moodle_enroll_*.log)
+- flexible_pipeline.py (pipeline_*.log)  
+- seis_wrapper.py (seis_wrapper_*.log)
+- Original sync logs (enrolment_sync.log)
 """
+
 import os
 import re
 import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
-import subprocess
 import json
 
 class EnrollmentMonitor:
-    def __init__(self, log_file=None, output_dir='.'):
-        """Initialize with auto-detection of latest log file"""
+    def __init__(self, log_dirs=None, output_dir='.'):
+        """
+        Initialize monitor with multiple log directories
+        
+        Args:
+            log_dirs: List of directories to scan for logs
+            output_dir: Output directory for dashboard
+        """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         
-        # Auto-detect the most recent log file if not specified
-        if log_file is None:
-            self.log_file = self.find_latest_log()
+        # Default log directories to scan
+        if log_dirs is None:
+            self.log_dirs = [
+                r'C:\integrator\enrollment-system\logs',  # Pipeline logs
+                r'C:\integrator\enrollment-system',       # Root directory
+                r'C:\moodle_sync',                         # Original sync
+                r'C:\moodle_sync\src\main_scripts',       # Scripts directory
+                '.',                                        # Current directory
+            ]
         else:
-            self.log_file = Path(log_file)
+            self.log_dirs = log_dirs
             
-        # Track which log format we're processing
-        self.log_format = 'unknown'
-
-    def find_latest_log(self):
-        """Find the most recent log file from possible locations"""
-        possible_patterns = [
-            r'C:\moodle_sync\enrolment_sync.log',
-            r'C:\moodle_sync\simple_enroll.log',
-            r'C:\moodle_sync\src\main_scripts\moodle_enroll_*.log',
-            r'C:\moodle_sync\src\main_scripts\moodle_sync_*.log',
-            r'*.log'  # Current directory logs
-        ]
+        # Log patterns to look for
+        self.log_patterns = {
+            'pipeline': 'pipeline_*.log',
+            'wrapper': 'seis_wrapper_*.log',
+            'enroll': 'moodle_enroll_*.log',
+            'sync': 'enrolment_sync.log',
+            'simple': 'simple_enroll.log',
+            'results': 'enrollment_results_*.json'
+        }
         
-        latest_log = None
-        latest_time = 0
+        # Find all logs
+        self.logs = self.find_all_logs()
         
-        print("🔍 Scanning for log files...")
-        for pattern in possible_patterns:
-            for log_path in glob.glob(pattern):
-                if Path(log_path).exists():
-                    mtime = Path(log_path).stat().st_mtime
-                    if mtime > latest_time:
-                        latest_time = mtime
-                        latest_log = Path(log_path)
-                        print(f"  Found: {log_path} ({datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')})")
+    def find_all_logs(self):
+        """Find all log files in configured directories"""
+        all_logs = {}
         
-        if latest_log:
-            print(f"✅ Selected: {latest_log}")
-            return latest_log
-        else:
-            print("⚠️  No log files found, using default")
-            return Path(r'C:\moodle_sync\enrolment_sync.log')
-
-    def detect_log_format(self, lines):
-        """Detect whether this is simple_enroll.py format or original format"""
-        sample = ' '.join(lines[:50]).lower()
+        print("\n🔍 Scanning for log files...")
         
-        if 'resolved' in sample and 'users' in sample:
-            return 'simple_enroll'
-        elif 'push complete:' in sample:
-            return 'original_push'
-        elif 'batch' in sample and 'enrolments' in sample:
-            return 'original_batch'
-        elif 'prepared' in sample and 'enrollments' in sample:
-            return 'simple_enroll'
-        else:
-            return 'unknown'
-
-    def parse_log_file(self, log_file):
-        """Parse the log file to extract key metrics - supports multiple formats"""
+        for log_dir in self.log_dirs:
+            dir_path = Path(log_dir)
+            if not dir_path.exists():
+                continue
+                
+            for log_type, pattern in self.log_patterns.items():
+                for log_file in dir_path.glob(pattern):
+                    mtime = datetime.fromtimestamp(log_file.stat().st_mtime)
+                    all_logs[str(log_file)] = {
+                        'path': log_file,
+                        'type': log_type,
+                        'mtime': mtime,
+                        'size': log_file.stat().st_size / 1024  # KB
+                    }
+                    print(f"  📄 {log_type}: {log_file.name} ({mtime.strftime('%Y-%m-%d %H:%M:%S')})")
+        
+        # Sort by modification time (newest first)
+        sorted_logs = dict(sorted(all_logs.items(), 
+                                 key=lambda x: x[1]['mtime'], 
+                                 reverse=True))
+        
+        print(f"\n✅ Found {len(sorted_logs)} log files")
+        return sorted_logs
+    
+    def get_latest_by_type(self, log_type):
+        """Get the latest log of a specific type"""
+        type_logs = {k: v for k, v in self.logs.items() if v['type'] == log_type}
+        if type_logs:
+            return list(type_logs.values())[0]['path']
+        return None
+    
+    def parse_pipeline_log(self, log_file):
+        """Parse flexible_pipeline.py log format"""
         metrics = {
-            'last_run': None,
+            'source_type': 'unknown',
+            'steps_completed': [],
             'total_records': 0,
             'successful': 0,
             'errors': 0,
-            'recent_entries': [],
-            'course_not_found': 0,
-            'user_creation_failed': 0,
-            'faculty_breakdown': {},
-            'department_breakdown': {},
-            'api_errors': 0,
-            'batch_info': [],
-            'users_found': 0,
-            'users_missing': 0,
-            'courses_found': 0,
-            'courses_missing': 0,
-            'skipped_records': 0,
-            'log_format': 'unknown',
-            'processing_time': None,
-            'total_batches': 0,
-            'successful_batches': 0,
-            'failed_batches': 0
+            'extraction_file': None,
+            'enrollment_file': None,
+            'processing_time': None
         }
-
-        # Faculty/Department code mappings (based on course codes observed)
-        faculty_codes = {
-            'ANLA': 'Faculty of Arts and Design',
-            'RSMH': 'Faculty of Applied Sciences',
-            'AOMT': 'Faculty of Management Sciences',
-            'CSTN': 'Faculty of Accounting and Informatics',
-            'RERE': 'Faculty of Applied Sciences',
-            'RSPM': 'Faculty of Management Sciences',
-            'APEM': 'Faculty of Management Sciences',
-            'ARMP': 'Faculty of Management Sciences',
-            'PMIR': 'Faculty of Management Sciences',
-            'ADFM': 'Faculty of Accounting and Informatics',
-            'FNLT': 'Faculty of Applied Sciences',
-            'CAAU': 'Faculty of Accounting and Informatics', 
-            'BSNC': 'Faculty of Applied Sciences',
-            'BNMN': 'Faculty of Management Sciences',
-            'SHPM': 'Faculty of Management Sciences',
-            'IMIC': 'Faculty of Applied Sciences',
-            'TRMP': 'Faculty of Engineering and the Built Environment',
-            'WWRK': 'Faculty of Engineering and the Built Environment',
-            'CMEP': 'Faculty of Engineering and the Built Environment',
-            'REMA': 'Faculty of Management Sciences',
-            'TAXB': 'Faculty of Accounting and Informatics',
-            'CCHB': 'Faculty of Applied Sciences',
-            'PBLF': 'Faculty of Management Sciences',
-            'TIPP': 'Faculty of Management Sciences',
-            'CADR': 'Faculty of Arts and Design',
-            'HYSA': 'Faculty of Applied Sciences',
-            'LABR': 'Faculty of Applied Sciences',
-            'IMAE': 'Faculty of Applied Sciences',
-            'FSTX': 'Faculty of Applied Sciences',
-            'FPSO': 'Faculty of Applied Sciences',
-            'FDPD': 'Faculty of Applied Sciences'
-        }
-
+        
         try:
-            # Get file modification time
-            mtime = datetime.fromtimestamp(log_file.stat().st_mtime)
-            metrics['last_run'] = mtime.strftime('%Y-%m-%d %H:%M:%S')
-            
-            # Read log file
             with open(log_file, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
             
-            # Detect log format
-            metrics['log_format'] = self.detect_log_format(lines)
-            print(f"📋 Detected log format: {metrics['log_format']}")
-            
-            # Track batch processing
-            current_batch = None
-            batch_success = True
-            
-            for i, line in enumerate(lines):
-                line_lower = line.lower()
+            for line in lines:
+                # Extract source type
+                if 'Source type:' in line:
+                    metrics['source_type'] = line.split('Source type:')[-1].strip()
                 
-                # Extract course codes for faculty breakdown
-                for code, faculty in faculty_codes.items():
-                    if code in line and ('_SEM' in line or 'course' in line_lower):
-                        # Faculty breakdown
-                        if faculty not in metrics['faculty_breakdown']:
-                            metrics['faculty_breakdown'][faculty] = 0
-                        metrics['faculty_breakdown'][faculty] += 1
+                # Extract step completion
+                if 'STEP 1:' in line and 'complete' in line.lower():
+                    metrics['steps_completed'].append('extraction')
+                elif 'STEP 2:' in line and 'complete' in line.lower():
+                    metrics['steps_completed'].append('processing')
+                elif 'STEP 3:' in line and 'complete' in line.lower():
+                    metrics['steps_completed'].append('enrollment')
+                
+                # Extract enrollment stats
+                if 'Enrollments:' in line:
+                    match = re.search(r'Enrollments: (\d+) successful, (\d+) failed', line)
+                    if match:
+                        metrics['successful'] = int(match.group(1))
+                        metrics['errors'] = int(match.group(2))
+                        metrics['total_records'] = metrics['successful'] + metrics['errors']
+                
+                # Extract file paths
+                if 'Extraction complete:' in line:
+                    match = re.search(r'Extraction complete: (.+\.csv)', line)
+                    if match:
+                        metrics['extraction_file'] = Path(match.group(1)).name
+                
+                if 'enrollment_ready' in line:
+                    match = re.search(r'Output file: (.+\.csv)', line)
+                    if match:
+                        metrics['enrollment_file'] = Path(match.group(1)).name
+                
+                # Extract processing time
+                if 'Time:' in line and 'seconds' in line:
+                    match = re.search(r'Time: ([\d.]+) seconds', line)
+                    if match:
+                        metrics['processing_time'] = float(match.group(1))
                         
-                        # Department breakdown (first 4 chars of course code)
-                        dept_code = code
-                        if dept_code not in metrics['department_breakdown']:
-                            metrics['department_breakdown'][dept_code] = 0
-                        metrics['department_breakdown'][dept_code] += 1
-                
-                # PARSE SIMPLE_ENROLL FORMAT
-                if metrics['log_format'] == 'simple_enroll':
-                    # User resolution
-                    if 'resolved' in line_lower and 'users' in line_lower:
-                        match = re.search(r'Resolved (\d+)/(\d+) users', line)
-                        if match:
-                            metrics['users_found'] = int(match.group(1))
-                            total_users = int(match.group(2))
-                            metrics['users_missing'] = total_users - metrics['users_found']
-                    
-                    # Course resolution
-                    elif 'resolved' in line_lower and 'courses' in line_lower:
-                        match = re.search(r'Resolved (\d+)/(\d+) courses', line)
-                        if match:
-                            metrics['courses_found'] = int(match.group(1))
-                            total_courses = int(match.group(2))
-                            metrics['courses_missing'] = total_courses - metrics['courses_found']
-                    
-                    # Prepared enrollments
-                    elif 'prepared' in line_lower and 'enrollments' in line_lower:
-                        match = re.search(r'Prepared (\d+)[,]*(\d*).*\((\d+)[,]*(\d*) skipped\)', line)
-                        if match:
-                            metrics['total_records'] = int(match.group(1).replace(',', ''))
-                            metrics['skipped_records'] = int(match.group(3).replace(',', ''))
-                    
-                    # Success/Error summary
-                    elif 'enrollment complete' in line_lower:
-                        # Look ahead for success/failed line
-                        for j in range(i, min(i+5, len(lines))):
-                            if 'successful:' in lines[j].lower() and 'failed:' in lines[j].lower():
-                                match = re.search(r'successful: (\d+).*failed: (\d+)', lines[j])
-                                if match:
-                                    metrics['successful'] = int(match.group(1))
-                                    metrics['errors'] = int(match.group(2))
-                                break
-                
-                # PARSE ORIGINAL BATCH FORMAT (YOUR CURRENT LOG)
-                else:
-                    # Total records from summary
-                    if 'total enrollments:' in line_lower:
-                        match = re.search(r'Total enrollments: (\d+)', line)
-                        if match:
-                            metrics['total_records'] = int(match.group(1))
-                    
-                    # User resolution stats
-                    if 'unique users:' in line_lower:
-                        match = re.search(r'Unique users: (\d+)', line)
-                        if match:
-                            metrics['users_found'] = int(match.group(1))
-                    
-                    # Course resolution stats
-                    if 'unique courses:' in line_lower:
-                        match = re.search(r'Unique courses: (\d+)', line)
-                        if match:
-                            metrics['courses_found'] = int(match.group(1))
-                    
-                    # Batch processing lines
-                    if 'batch' in line_lower and 'enrollments' in line_lower:
-                        # Start of a batch
-                        match = re.search(r'Batch (\d+): (\d+) enrollments', line)
-                        if match:
-                            current_batch = {
-                                'batch': int(match.group(1)),
-                                'count': int(match.group(2)),
-                                'status': 'Processing'
-                            }
-                            metrics['total_batches'] += 1
-                    
-                    # Batch success/failure
-                    elif 'success' in line_lower and ('batch' in line_lower or '✓' in line):
-                        if current_batch:
-                            current_batch['status'] = 'Success'
-                            metrics['batch_info'].append(current_batch)
-                            metrics['successful_batches'] += 1
-                            metrics['successful'] += current_batch['count']
-                            current_batch = None
-                    
-                    elif 'fail' in line_lower and ('batch' in line_lower or '✗' in line):
-                        if current_batch:
-                            current_batch['status'] = 'Failed'
-                            metrics['batch_info'].append(current_batch)
-                            metrics['failed_batches'] += 1
-                            metrics['errors'] += current_batch['count']
-                            current_batch = None
-                    
-                    # API Errors
-                    elif 'api call' in line_lower and 'failed' in line_lower:
-                        metrics['api_errors'] += 1
-                    
-                    # Final summary line
-                    elif 'enrollment complete:' in line_lower:
-                        match = re.search(r'(\d+) success, (\d+) failed', line)
-                        if match:
-                            metrics['successful'] = int(match.group(1))
-                            metrics['errors'] = int(match.group(2))
-                    
-                    # Prepared enrollments (with skipped)
-                    elif 'prepared' in line_lower and 'enrollments' in line_lower:
-                        match = re.search(r'Prepared (\d+) enrollments \((\d+) skipped\)', line)
-                        if match:
-                            metrics['total_records'] = int(match.group(1))
-                            metrics['skipped_records'] = int(match.group(2))
-            
-            # Get recent entries (last 30 lines)
-            metrics['recent_entries'] = [line.strip() for line in lines[-30:] if line.strip()]
-            
-            # Calculate derived metrics
-            if metrics['successful'] == 0 and metrics['errors'] == 0:
-                # Try to calculate from batches
-                metrics['successful'] = sum(b['count'] for b in metrics['batch_info'] if b['status'] == 'Success')
-                metrics['errors'] = sum(b['count'] for b in metrics['batch_info'] if b['status'] == 'Failed')
-            
-            # Ensure total_records is at least successful+errors
-            if metrics['total_records'] == 0:
-                metrics['total_records'] = metrics['successful'] + metrics['errors'] + metrics['skipped_records']
-            
         except Exception as e:
-            print(f"❌ Error parsing log file: {e}")
-            import traceback
-            traceback.print_exc()
-
+            print(f"Error parsing pipeline log: {e}")
+        
         return metrics
-
-    def generate_html(self, metrics):
-        """Generate enhanced HTML dashboard from metrics."""
+    
+    def parse_enrollment_results(self, json_file):
+        """Parse enrollment_results_*.json files"""
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            return {
+                'total_records': data.get('total_records_processed', 0),
+                'successful': data.get('successful_operations', 0),
+                'errors': data.get('failed_operations', 0),
+                'users_found': data.get('users_found', 0),
+                'users_missing': data.get('unique_users', 0) - data.get('users_found', 0),
+                'courses_found': data.get('courses_found', 0),
+                'courses_missing': data.get('unique_courses', 0) - data.get('courses_found', 0),
+                'users_created': data.get('users_created', 0),
+                'dry_run': data.get('dry_run', True),
+                'batch_size': data.get('batch_size', 500),
+                'workers': data.get('workers', 4),
+                'parallel': data.get('parallel', False)
+            }
+        except Exception as e:
+            print(f"Error parsing results JSON: {e}")
+            return None
+    
+    def generate_combined_metrics(self):
+        """Generate combined metrics from all log types"""
+        combined = {
+            'last_run': None,
+            'total_records_24h': 0,
+            'successful_24h': 0,
+            'errors_24h': 0,
+            'pipelines': [],
+            'recent_enrollments': [],
+            'system_status': 'healthy',
+            'log_summary': {}
+        }
         
-        # Determine badge color based on log format
-        format_badge = {
-            'simple_enroll': '<span class="badge bg-success">simple_enroll.py</span>',
-            'original_push': '<span class="badge bg-primary">original push</span>',
-            'original_batch': '<span class="badge bg-info">batch sync</span>',
-            'unknown': '<span class="badge bg-secondary">unknown format</span>'
-        }.get(metrics['log_format'], '<span class="badge bg-secondary">unknown</span>')
+        cutoff_24h = datetime.now() - timedelta(hours=24)
         
-        # Calculate success rate
-        success_rate = (metrics['successful'] / max(metrics['total_records'], 1)) * 100
+        for log_path_str, log_info in self.logs.items():
+            log_path = log_info['path']
+            log_type = log_info['type']
+            log_time = log_info['mtime']
+            
+            # Track latest run overall
+            if combined['last_run'] is None or log_time > combined['last_run']:
+                combined['last_run'] = log_time
+            
+            # Summarize by type
+            if log_type not in combined['log_summary']:
+                combined['log_summary'][log_type] = {
+                    'count': 0,
+                    'latest': None,
+                    'size_kb': 0
+                }
+            
+            combined['log_summary'][log_type]['count'] += 1
+            combined['log_summary'][log_type]['size_kb'] += log_info['size']
+            
+            if combined['log_summary'][log_type]['latest'] is None or log_time > combined['log_summary'][log_type]['latest']:
+                combined['log_summary'][log_type]['latest'] = log_time
+            
+            # Parse based on type
+            metrics = None
+            if log_type == 'results' and log_time > cutoff_24h:
+                metrics = self.parse_enrollment_results(log_path)
+                if metrics:
+                    combined['recent_enrollments'].append({
+                        'time': log_time,
+                        'file': log_path.name,
+                        'metrics': metrics
+                    })
+                    combined['total_records_24h'] += metrics['total_records']
+                    combined['successful_24h'] += metrics['successful']
+                    combined['errors_24h'] += metrics['errors']
+            
+            elif log_type == 'pipeline' and log_time > cutoff_24h:
+                metrics = self.parse_pipeline_log(log_path)
+                if metrics:
+                    combined['pipelines'].append({
+                        'time': log_time,
+                        'file': log_path.name,
+                        'metrics': metrics
+                    })
+        
+        # Determine system status
+        if combined['errors_24h'] > 100:
+            combined['system_status'] = 'critical'
+        elif combined['errors_24h'] > 10:
+            combined['system_status'] = 'warning'
+        elif combined['total_records_24h'] == 0:
+            combined['system_status'] = 'inactive'
+        
+        return combined
+    
+    def generate_html(self, combined_metrics):
+        """Generate enhanced HTML dashboard"""
+        
+        status_colors = {
+            'healthy': 'success',
+            'warning': 'warning',
+            'critical': 'danger',
+            'inactive': 'secondary'
+        }
         
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moodle Enrollment Sync Monitor</title>
+    <title>Moodle Enrollment System Monitor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {{ background-color: #f8f9fa; }}
-        .metric-card {{ transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+        .metric-card {{ transition: transform 0.2s; }}
         .metric-card:hover {{ transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }}
-        .status-healthy {{ color: #28a745; font-weight: bold; }}
-        .status-warning {{ color: #ffc107; font-weight: bold; }}
-        .status-error {{ color: #dc3545; font-weight: bold; }}
-        .section-header {{ border-left: 4px solid #007bff; padding-left: 10px; margin: 20px 0 15px 0; }}
-        .progress {{ height: 8px; margin-bottom: 10px; }}
-        .log-line {{ 
+        .log-entry {{ 
             font-family: 'Courier New', monospace; 
-            font-size: 0.8rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 0.85rem;
+            border-left: 3px solid transparent;
+            padding: 2px 8px;
+            margin: 2px 0;
         }}
-        .log-line:hover {{
-            white-space: normal;
-            background-color: #f8f9fa;
-        }}
+        .log-pipeline {{ border-left-color: #007bff; background-color: #f0f7ff; }}
+        .log-enroll {{ border-left-color: #28a745; background-color: #f0fff0; }}
+        .log-wrapper {{ border-left-color: #ffc107; background-color: #fff8e0; }}
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row">
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
             <div class="col-12">
-                <h1 class="text-center mb-4">
-                    Moodle Enrollment Sync Monitor
-                    {format_badge}
-                </h1>
-                <p class="text-center text-muted">
-                    Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | 
-                    Log file: {self.log_file.name} | 
-                    Format: {metrics['log_format']}
-                </p>
-                <!-- Force redeploy: {datetime.now().strftime('%Y%m%d%H%M%S')} -->
+                <div class="card">
+                    <div class="card-body">
+                        <h1 class="text-center">
+                            🎓 Moodle Enrollment System Monitor
+                            <span class="badge bg-{status_colors.get(combined_metrics['system_status'], 'secondary')} ms-2">
+                                {combined_metrics['system_status'].upper()}
+                            </span>
+                        </h1>
+                        <p class="text-center text-muted">
+                            Last activity: {combined_metrics['last_run'].strftime('%Y-%m-%d %H:%M:%S') if combined_metrics['last_run'] else 'Never'} |
+                            Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <!-- Main Metrics Row -->
+        
+        <!-- 24h Summary -->
         <div class="row mb-4">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card metric-card">
                     <div class="card-body text-center">
-                        <h5 class="card-title text-muted">Last Sync</h5>
-                        <p class="card-text h4">{metrics['last_run'] or 'N/A'}</p>
-                        <small class="text-muted">Log timestamp</small>
+                        <h5 class="text-muted">Last 24h Enrollments</h5>
+                        <h2 class="text-primary">{combined_metrics['total_records_24h']:,}</h2>
+                        <small>Total records processed</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card metric-card">
                     <div class="card-body text-center">
-                        <h5 class="card-title text-muted">Total Enrollments</h5>
-                        <p class="card-text h4">{metrics['total_records']:,}</p>
-                        <small class="text-muted">Records processed</small>
+                        <h5 class="text-muted">Successful</h5>
+                        <h2 class="text-success">{combined_metrics['successful_24h']:,}</h2>
+                        <small>{combined_metrics['successful_24h']/max(combined_metrics['total_records_24h'],1)*100:.1f}% success rate</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <div class="card metric-card">
                     <div class="card-body text-center">
-                        <h5 class="card-title text-muted">Successful</h5>
-                        <p class="card-text h4 status-healthy">{metrics['successful']:,}</p>
-                        <small class="text-muted">{success_rate:.1f}% success rate</small>
+                        <h5 class="text-muted">Errors</h5>
+                        <h2 class="text-danger">{combined_metrics['errors_24h']:,}</h2>
+                        <small>{combined_metrics['errors_24h']/max(combined_metrics['total_records_24h'],1)*100:.1f}% error rate</small>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card metric-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-muted">Errors</h5>
-                        <p class="card-text h4 status-error">{metrics['errors']:,}</p>
-                        <small class="text-muted">{100-success_rate:.1f}% error rate</small>
-                    </div>
-                </div>
-            </div>
-        </div>"""
-
-        # Add Resolution Metrics
-        if metrics.get('users_found', 0) > 0 or metrics.get('courses_found', 0) > 0:
-            html += f"""
-        <!-- Resolution Metrics Row -->
+        </div>
+        
+        <!-- Log Files Summary -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">👥 User Resolution</h5>
+                        <h5 class="mb-0">📋 Log Files Overview</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <h3 class="status-healthy">{metrics.get('users_found', 0):,}</h3>
-                                <small>Found in Moodle</small>
-                                <div class="progress">
-                                    <div class="progress-bar bg-success" style="width: {((metrics.get('users_found',0)/max(metrics.get('users_found',0)+metrics.get('users_missing',0),1))*100):.1f}%"></div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <h3 class="status-error">{metrics.get('users_missing', 0):,}</h3>
-                                <small>Missing from Moodle</small>
-                                <div class="progress">
-                                    <div class="progress-bar bg-danger" style="width: {((metrics.get('users_missing',0)/max(metrics.get('users_found',0)+metrics.get('users_missing',0),1))*100):.1f}%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">📚 Course Resolution</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <h3 class="status-healthy">{metrics.get('courses_found', 0):,}</h3>
-                                <small>Found in Moodle</small>
-                                <div class="progress">
-                                    <div class="progress-bar bg-success" style="width: {((metrics.get('courses_found',0)/max(metrics.get('courses_found',0)+metrics.get('courses_missing',0),1))*100):.1f}%"></div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <h3 class="status-error">{metrics.get('courses_missing', 0):,}</h3>
-                                <small>Missing from Moodle</small>
-                                <div class="progress">
-                                    <div class="progress-bar bg-danger" style="width: {((metrics.get('courses_missing',0)/max(metrics.get('courses_found',0)+metrics.get('courses_missing',0),1))*100):.1f}%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>"""
-
-        # Skipped Records
-        if metrics.get('skipped_records', 0) > 0:
-            html += f"""
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4 text-center">
-                                <h5>Skipped Records</h5>
-                                <h3 class="status-warning">{metrics.get('skipped_records', 0):,}</h3>
-                                <small>Enrollments skipped due to missing users/courses</small>
-                            </div>
-                            <div class="col-md-4 text-center">
-                                <h5>API Errors</h5>
-                                <h3 class="status-error">{metrics.get('api_errors', 0)}</h3>
-                                <small>Moodle API communication issues</small>
-                            </div>
-                            <div class="col-md-4 text-center">
-                                <h5>Success Rate</h5>
-                                <h3 class="status-healthy">{success_rate:.1f}%</h3>
-                                <small>Of total records</small>
-                            </div>
+                            {self.generate_log_summary_html(combined_metrics['log_summary'])}
                         </div>
                     </div>
                 </div>
             </div>
         </div>"""
-
-        # Faculty and Department Breakdown
-        if metrics['faculty_breakdown'] or metrics['department_breakdown']:
+        
+        # Recent Enrollments from JSON Results
+        if combined_metrics['recent_enrollments']:
             html += f"""
-        <div class="section-header">
-            <h4>📊 Enrollment Distribution</h4>
-        </div>
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-12">
                 <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">🏫 Faculty Breakdown</h5>
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">✅ Recent Enrollment Operations (Last 24h)</h5>
                     </div>
-                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                        {self.generate_distribution_html(metrics['faculty_breakdown'], 'primary')}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0">📋 Department Codes</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                        {self.generate_distribution_html(metrics['department_breakdown'], 'info')}
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>File</th>
+                                        <th>Records</th>
+                                        <th>Success</th>
+                                        <th>Errors</th>
+                                        <th>Users Found</th>
+                                        <th>Users Missing</th>
+                                        <th>Courses Found</th>
+                                        <th>Users Created</th>
+                                        <th>Mode</th>
+                                    </tr>
+                                </thead>
+                                <tbody>"""
+            
+            for enroll in combined_metrics['recent_enrollments'][:10]:
+                m = enroll['metrics']
+                html += f"""
+                                    <tr>
+                                        <td>{enroll['time'].strftime('%H:%M:%S')}</td>
+                                        <td><small>{enroll['file'][:30]}</small></td>
+                                        <td class="text-center">{m['total_records']:,}</td>
+                                        <td class="text-success text-center">{m['successful']:,}</td>
+                                        <td class="text-danger text-center">{m['errors']:,}</td>
+                                        <td class="text-center">{m['users_found']:,}</td>
+                                        <td class="text-center text-warning">{m['users_missing']:,}</td>
+                                        <td class="text-center">{m['courses_found']:,}</td>
+                                        <td class="text-center">{m['users_created']:,}</td>
+                                        <td><span class="badge bg-{'warning' if m['dry_run'] else 'success'}">{'DRY RUN' if m['dry_run'] else 'LIVE'}</span></td>
+                                    </tr>"""
+            
+            html += """
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>"""
-
-        # Recent Activity
-        html += f"""
-        <div class="section-header">
-            <h4>⚡ Recent Activity</h4>
-        </div>
+        
+        # Recent Pipeline Runs
+        if combined_metrics['pipelines']:
+            html += f"""
         <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0">📦 Recent Batch Activity</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                        {self.generate_batch_html(metrics['batch_info'])}
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0">📝 Recent Log Entries</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
-                        {self.generate_log_entries_html(metrics['recent_entries'])}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-body text-center text-muted">
-                        <small>
-                            Generated by Enhanced Enrollment Monitor Script | 
-                            Log: {self.log_file} | 
-                            Format: {metrics['log_format']} |
-                            {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-                        </small>
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">🔄 Recent Pipeline Runs</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Source Type</th>
+                                        <th>Steps</th>
+                                        <th>Records</th>
+                                        <th>Success</th>
+                                        <th>Errors</th>
+                                        <th>Extraction File</th>
+                                        <th>Processing Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>"""
+            
+            for pipeline in combined_metrics['pipelines']:
+                m = pipeline['metrics']
+                steps_badge = ''.join([f'<span class="badge bg-success me-1">✓{s[:3]}</span>' for s in m['steps_completed']])
+                html += f"""
+                                    <tr>
+                                        <td>{pipeline['time'].strftime('%H:%M:%S')}</td>
+                                        <td>{m['source_type']}</td>
+                                        <td>{steps_badge}</td>
+                                        <td>{m['total_records']:,}</td>
+                                        <td class="text-success">{m['successful']:,}</td>
+                                        <td class="text-danger">{m['errors']:,}</td>
+                                        <td><small>{m['extraction_file'] or 'N/A'}</small></td>
+                                        <td>{m['processing_time']:.1f}s</td>
+                                    </tr>"""
+            
+            html += """
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>"""
+        
+        # Recent Log Entries from All Logs
+        html += f"""
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">📝 Recent Activity (All Logs)</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        {self.get_recent_log_entries()}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center text-muted small">
+                        Generated by Enhanced Enrollment Monitor | 
+                        Scanning {len(self.logs)} log files in {len(self.log_dirs)} directories |
+                        {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>"""
+        
         return html
-
-    def generate_distribution_html(self, data, badge_color='primary'):
-        """Generate HTML for distribution lists"""
-        if not data:
-            return '<p class="text-muted text-center">No data available</p>'
-        
-        sorted_items = sorted(data.items(), key=lambda x: x[1], reverse=True)
-        total = sum(data.values())
-        
+    
+    def generate_log_summary_html(self, log_summary):
+        """Generate HTML for log summary"""
         html = ''
-        for item, count in sorted_items[:20]:  # Show top 20
-            percentage = (count / total * 100) if total > 0 else 0
-            html += f'''
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span>{item}</span>
-                <div>
-                    <span class="badge bg-{badge_color} me-2">{count}</span>
-                    <small class="text-muted">({percentage:.1f}%)</small>
-                </div>
-            </div>
-            <div class="progress mb-3">
-                <div class="progress-bar bg-{badge_color}" style="width: {percentage}%"></div>
-            </div>'''
-        
-        if len(sorted_items) > 20:
-            html += f'<p class="text-muted text-center mt-2">... and {len(sorted_items) - 20} more</p>'
-        
+        for log_type, info in log_summary.items():
+            latest = info['latest'].strftime('%H:%M:%S') if info['latest'] else 'Never'
+            html += f"""
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">{log_type.upper()}</h6>
+                            <h3>{info['count']}</h3>
+                            <small>Files</small>
+                            <p class="mt-2 mb-0"><small class="text-muted">Latest: {latest}</small></p>
+                            <p><small class="text-muted">Total: {info['size_kb']:.0f} KB</small></p>
+                        </div>
+                    </div>
+                </div>"""
         return html
-
-    def generate_batch_html(self, batch_info):
-        """Generate HTML for batch information"""
-        if not batch_info:
-            return '<p class="text-muted text-center">No batch data available</p>'
+    
+    def get_recent_log_entries(self, max_entries=50):
+        """Get recent entries from all log files"""
+        all_entries = []
         
-        html = ''
-        for batch in batch_info[-15:]:  # Show last 15 batches
-            status_class = 'success' if 'Success' in batch['status'] else 'warning'
-            html += f'''
-            <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-1">
-                <span>Batch {batch['batch']}</span>
-                <span>
-                    <span class="badge bg-secondary me-2">{batch['count']} records</span>
-                    <span class="badge bg-{status_class}">{batch['status']}</span>
-                </span>
-            </div>'''
+        for log_path_str, log_info in list(self.logs.items())[:10]:  # Check latest 10 logs
+            log_path = log_info['path']
+            log_type = log_info['type']
+            
+            try:
+                with open(log_path, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()
+                    # Get last 10 lines from each log
+                    for line in lines[-10:]:
+                        if line.strip():
+                            all_entries.append({
+                                'time': log_info['mtime'],
+                                'type': log_type,
+                                'line': line.strip(),
+                                'file': log_path.name
+                            })
+            except Exception:
+                continue
         
-        return html
-
-    def generate_log_entries_html(self, entries):
-        """Generate HTML for log entries"""
-        if not entries:
-            return '<p class="text-muted text-center">No recent entries</p>'
+        # Sort by time (newest first) and limit
+        all_entries.sort(key=lambda x: x['time'], reverse=True)
         
         html = '<div class="list-group list-group-flush">'
-        for entry in entries[-20:]:  # Show last 20 entries
-            # Color code based on content
-            entry_lower = entry.lower()
-            if 'error' in entry_lower or 'fail' in entry_lower or '✗' in entry:
-                color_class = 'text-danger'
-                icon = '❌'
-            elif 'success' in entry_lower or '✓' in entry or '✅' in entry:
-                color_class = 'text-success'
-                icon = '✅'
-            elif 'warning' in entry_lower or '⚠️' in entry:
-                color_class = 'text-warning'
-                icon = '⚠️'
-            else:
-                color_class = 'text-muted'
-                icon = '📝'
+        for entry in all_entries[:max_entries]:
+            # Truncate long lines
+            line = entry['line']
+            if len(line) > 150:
+                line = line[:147] + '...'
             
-            # Truncate long entries
-            if len(entry) > 100:
-                display_entry = entry[:97] + '...'
-            else:
-                display_entry = entry
+            # Color code by type
+            type_class = {
+                'pipeline': 'log-pipeline',
+                'enroll': 'log-enroll',
+                'wrapper': 'log-wrapper',
+                'results': 'log-results',
+                'sync': 'log-sync'
+            }.get(entry['type'], '')
             
-            html += f'<div class="list-group-item {color_class} small py-1 log-line" title="{entry}">{icon} {display_entry}</div>'
+            html += f'<div class="log-entry {type_class} small" title="{entry["file"]}"><span class="text-muted">[{entry["time"].strftime("%H:%M:%S")}]</span> {line}</div>'
         
         html += '</div>'
         return html
-
+    
     def generate_dashboard(self):
-        """Main method to generate the dashboard."""
-        if not self.log_file.exists():
-            print(f"❌ Log file not found: {self.log_file}")
-            return False
-
-        print(f"\n{'='*60}")
-        print(f"📊 Generating Enrollment Dashboard")
-        print(f"{'='*60}")
-        print(f"📁 Log file: {self.log_file}")
-        print(f"📁 Output directory: {self.output_dir}")
+        """Generate the complete dashboard"""
+        print("\n" + "="*60)
+        print("📊 Generating Enhanced Enrollment Dashboard")
+        print("="*60)
         
-        metrics = self.parse_log_file(self.log_file)
+        # Find all logs
+        self.find_all_logs()
         
-        # Print summary to console
-        print(f"\n📋 Summary:")
-        print(f"  • Format: {metrics['log_format']}")
-        print(f"  • Last run: {metrics['last_run']}")
-        print(f"  • Total records: {metrics['total_records']:,}")
-        print(f"  • Successful: {metrics['successful']:,}")
-        print(f"  • Errors: {metrics['errors']:,}")
+        # Generate combined metrics
+        combined_metrics = self.generate_combined_metrics()
         
-        if metrics.get('users_found', 0) > 0:
-            print(f"  • Users found: {metrics['users_found']:,}")
-            print(f"  • Users missing: {metrics['users_missing']:,}")
-        if metrics.get('courses_found', 0) > 0:
-            print(f"  • Courses found: {metrics['courses_found']:,}")
-            print(f"  • Courses missing: {metrics['courses_missing']:,}")
-        if metrics.get('skipped_records', 0) > 0:
-            print(f"  • Skipped: {metrics['skipped_records']:,}")
-        if metrics.get('api_errors', 0) > 0:
-            print(f"  • API Errors: {metrics['api_errors']}")
+        # Print summary
+        print(f"\n📋 System Status: {combined_metrics['system_status'].upper()}")
+        print(f"  • Last activity: {combined_metrics['last_run'].strftime('%Y-%m-%d %H:%M:%S') if combined_metrics['last_run'] else 'Never'}")
+        print(f"  • Last 24h: {combined_metrics['total_records_24h']:,} records")
+        print(f"  • Success rate: {combined_metrics['successful_24h']/max(combined_metrics['total_records_24h'],1)*100:.1f}%")
         
-        html_content = self.generate_html(metrics)
-
-        # Write HTML file
+        print(f"\n📋 Log Summary:")
+        for log_type, info in combined_metrics['log_summary'].items():
+            print(f"  • {log_type}: {info['count']} files ({info['size_kb']:.0f} KB)")
+        
+        # Generate HTML
+        html_content = self.generate_html(combined_metrics)
+        
+        # Write to file
         html_file = self.output_dir / 'index.html'
         with open(html_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
-
+        
         print(f"\n✅ Dashboard generated: {html_file}")
-        print(f"{'='*60}\n")
+        print("="*60)
+        
         return True
+
 
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Generate Enrollment Monitor Dashboard')
-    parser.add_argument('--log-file', help='Specific log file to process')
+    parser = argparse.ArgumentParser(description='Generate Enhanced Enrollment Monitor Dashboard')
+    parser.add_argument('--log-dirs', nargs='+', help='Directories to scan for logs')
     parser.add_argument('--output-dir', default='.', help='Output directory for dashboard')
     
     args = parser.parse_args()
     
     monitor = EnrollmentMonitor(
-        log_file=args.log_file,
+        log_dirs=args.log_dirs,
         output_dir=args.output_dir
     )
     
     success = monitor.generate_dashboard()
-
+    
     if success:
-        print("✅ Dashboard generation completed successfully!")
+        print("\n✅ Dashboard generation completed successfully!")
     else:
-        print("❌ Failed to generate dashboard.")
+        print("\n❌ Failed to generate dashboard.")
         exit(1)
+
 
 if __name__ == '__main__':
     main()

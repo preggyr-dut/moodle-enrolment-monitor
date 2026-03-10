@@ -3,333 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moodle Enrollment Sync Monitor</title>
+    <title>Moodle Enrollment System Monitor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
         .metric-card { transition: transform 0.2s; }
-        .metric-card:hover { transform: translateY(-2px); }
-        .status-healthy { color: #28a745; }
-        .status-warning { color: #ffc107; }
-        .status-error { color: #dc3545; }
+        .metric-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .log-entry { 
+            font-family: 'Courier New', monospace; 
+            font-size: 0.85rem;
+            border-left: 3px solid transparent;
+            padding: 2px 8px;
+            margin: 2px 0;
+        }
+        .log-pipeline { border-left-color: #007bff; background-color: #f0f7ff; }
+        .log-enroll { border-left-color: #28a745; background-color: #f0fff0; }
+        .log-wrapper { border-left-color: #ffc107; background-color: #fff8e0; }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row">
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="row mb-4">
             <div class="col-12">
-                <h1 class="text-center mb-4">Moodle Enrollment Sync Monitor</h1>
-                <p class="text-center text-muted">Last updated: 2026-02-19 13:51:24</p>
-                <!-- Force redeploy: 20260219135124 -->
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card metric-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Last Sync</h5>
-                        <p class="card-text h4">2026-02-19 02:00:06</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card metric-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Total Records</h5>
-                        <p class="card-text h4">303463</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card metric-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Successful</h5>
-                        <p class="card-text h4 status-healthy">0</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card metric-card">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">Errors</h5>
-                        <p class="card-text h4 status-error">127</p>
+                <div class="card">
+                    <div class="card-body">
+                        <h1 class="text-center">
+                            🎓 Moodle Enrollment System Monitor
+                            <span class="badge bg-secondary ms-2">
+                                INACTIVE
+                            </span>
+                        </h1>
+                        <p class="text-center text-muted">
+                            Last activity: 2026-03-05 10:56:07 |
+                            Generated: 2026-03-09 08:23:42
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
-
+        
+        <!-- 24h Summary -->
         <div class="row mb-4">
             <div class="col-md-4">
                 <div class="card metric-card">
                     <div class="card-body text-center">
-                        <h5 class="card-title">API Errors</h5>
-                        <p class="card-text h4 status-error">3010</p>
-                        <small class="text-muted">Moodle API issues</small>
+                        <h5 class="text-muted">Last 24h Enrollments</h5>
+                        <h2 class="text-primary">0</h2>
+                        <small>Total records processed</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card metric-card">
                     <div class="card-body text-center">
-                        <h5 class="card-title">Courses Not Found</h5>
-                        <p class="card-text h4 status-warning">100</p>
-                        <small class="text-muted">Missing courses</small>
+                        <h5 class="text-muted">Successful</h5>
+                        <h2 class="text-success">0</h2>
+                        <small>0.0% success rate</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
                 <div class="card metric-card">
                     <div class="card-body text-center">
-                        <h5 class="card-title">User Creation Failed</h5>
-                        <p class="card-text h4 status-error">0</p>
-                        <small class="text-muted">Account issues</small>
+                        <h5 class="text-muted">Errors</h5>
+                        <h2 class="text-danger">0</h2>
+                        <small>0.0% error rate</small>
                     </div>
                 </div>
             </div>
         </div>
-
+        
+        <!-- Log Files Summary -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Faculty Breakdown</h5>
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">📋 Log Files Overview</h5>
                     </div>
                     <div class="card-body">
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>Faculty of Applied Sciences</span>
-                            <span class="badge bg-primary">1118</span>
+                        <div class="row">
+                            
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">WRAPPER</h6>
+                            <h3>3</h3>
+                            <small>Files</small>
+                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 10:56:07</small></p>
+                            <p><small class="text-muted">Total: 0 KB</small></p>
                         </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>Faculty of Management Sciences</span>
-                            <span class="badge bg-primary">608</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>Faculty of Engineering and the Built Environment</span>
-                            <span class="badge bg-primary">423</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>Faculty of Accounting and Informatics</span>
-                            <span class="badge bg-primary">178</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>Faculty of Arts and Design</span>
-                            <span class="badge bg-primary">70</span>
-                        </div>
-                        
                     </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Department Codes</h5>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">ENROLL</h6>
+                            <h3>17</h3>
+                            <small>Files</small>
+                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 13:50:55</small></p>
+                            <p><small class="text-muted">Total: 223 KB</small></p>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>FNLT</span>
-                            <span class="badge bg-info">260</span>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">RESULTS</h6>
+                            <h3>12</h3>
+                            <small>Files</small>
+                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 13:50:55</small></p>
+                            <p><small class="text-muted">Total: 4 KB</small></p>
                         </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>CMEP</span>
-                            <span class="badge bg-info">234</span>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">SYNC</h6>
+                            <h3>1</h3>
+                            <small>Files</small>
+                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 02:00:06</small></p>
+                            <p><small class="text-muted">Total: 8967 KB</small></p>
                         </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>SHPM</span>
-                            <span class="badge bg-info">194</span>
+                    </div>
+                </div>
                         </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>IMIC</span>
-                            <span class="badge bg-info">186</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>PBLF</span>
-                            <span class="badge bg-info">136</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>FPSO</span>
-                            <span class="badge bg-info">129</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>TAXB</span>
-                            <span class="badge bg-info">112</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>TIPP</span>
-                            <span class="badge bg-info">110</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>TRMP</span>
-                            <span class="badge bg-info">100</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>FSTX</span>
-                            <span class="badge bg-info">92</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>WWRK</span>
-                            <span class="badge bg-info">89</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>BNMN</span>
-                            <span class="badge bg-info">86</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>FDPD</span>
-                            <span class="badge bg-info">84</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>REMA</span>
-                            <span class="badge bg-info">82</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>LABR</span>
-                            <span class="badge bg-info">79</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>HYSA</span>
-                            <span class="badge bg-info">78</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>IMAE</span>
-                            <span class="badge bg-info">73</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>BSNC</span>
-                            <span class="badge bg-info">71</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>CADR</span>
-                            <span class="badge bg-info">70</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>CCHB</span>
-                            <span class="badge bg-info">66</span>
-                        </div>
-                        
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>CAAU</span>
-                            <span class="badge bg-info">66</span>
-                        </div>
-                        
                     </div>
                 </div>
             </div>
         </div>
-
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Recent Batch Activity</h5>
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">📝 Recent Activity (All Logs)</h5>
                     </div>
-                    <div class="card-body">
-                        <div style="max-height: 250px; overflow-y: auto;">
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Batch 3 (50 records)</span>
-                                <span class="badge bg-success">Success</span>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Batch 4 (50 records)</span>
-                                <span class="badge bg-success">Success</span>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Batch 5 (50 records)</span>
-                                <span class="badge bg-success">Success</span>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Batch 6 (50 records)</span>
-                                <span class="badge bg-success">Success</span>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Batch 7 (50 records)</span>
-                                <span class="badge bg-success">Success</span>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Batch 8 (50 records)</span>
-                                <span class="badge bg-success">Success</span>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Batch 9 (50 records)</span>
-                                <span class="badge bg-success">Success</span>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span>Batch 10 (14 records)</span>
-                                <span class="badge bg-success">Success</span>
-                            </div>
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Recent Log Activity</h5>
-                    </div>
-                    <div class="card-body">
-                        <div style="max-height: 250px; overflow-y: auto;">
-                            <p class='mb-1 small text-truncate'>Processing: 352 enrolments and 2 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 352 enrolments and 2 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 352 enrolments and 2 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 0 enrolments and 0 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 294946 enrolments and 1184 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 295143 enrolments and 1206 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 295164 enrolments and 1284 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 297569 enrolments and 1446 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 300427 enrolments and 1719 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 303463 enrolments and 1962 removals.
-</p><p class='mb-1 small text-truncate'>Processing: 295164 enrolments and 1284 removals.</p><p class='mb-1 small text-truncate'>Processing: 295143 enrolments and 1206 removals.</p><p class='mb-1 small text-truncate'>Processing: 294946 enrolments and 1184 removals.</p><p class='mb-1 small text-truncate'>Processing: 0 enrolments and 0 removals.</p><p class='mb-1 small text-truncate'>Error fetching data: ('42S02', "[42S02] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Invalid object name 'PSCSPRD.dbo.PS_STDNT_ENRL'. (208) (SQLExecDirectW)")</p>
-                        </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div class="list-group list-group-flush"><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,625 - INFO -   Progress: 133,946/145,836 (91.8%) @ 34 enrollments/sec</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,626 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 📊 PARALLEL PROCESSING COMPLETE:</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,626 - INFO -   ✅ Successful: 133,946</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,627 - INFO -   ❌ Failed: 0</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,627 - INFO -   ⏭️ Skipped: 11,890</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,628 - INFO -   ⏱️ Time: 3897.4 seconds (37/sec)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,661 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 📁 Results saved to: enrollment_results_20260303_135055.json</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,664 - INFO - 📝 Log saved to: moodle_enroll_20260303_112449.log</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "excluded_courses": [],</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "deduplication_method": "session",</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "users_created": 0,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "successful_operations": 133946,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "failed_operations": 0,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "dry_run": false,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "batch_size": 500,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "workers": 4,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "parallel": true</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> }</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:38:57,951 - INFO -   ✓ Batch 112/118: 498 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:39:15,185 - INFO -   ✓ Batch 113/118: 499 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:39:28,854 - ERROR - API Error: Error writing to database</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:39:28,864 - INFO -   ✓ Batch 118/118: 345 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:39:43,238 - WARNING - Timeout, retrying in 1.8s (attempt 1/3)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:40:11,669 - INFO -   ✓ Batch 114/118: 496 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:40:20,867 - WARNING - Timeout, retrying in 1.2s (attempt 1/3)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:40:48,544 - INFO -   ✓ Batch 116/118: 498 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:40:58,468 - WARNING - Timeout, retrying in 1.5s (attempt 1/3)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:41:29,069 - INFO -   ✓ Batch 117/118: 500 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,387 - INFO - ⚙️  Workers: 4</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,388 - INFO - 🔧 Mode: LIVE</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,388 - INFO - 👤 Create missing users: True</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,389 - INFO - 🚫 Excluded courses: None</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,389 - INFO - 🔄 Deduplication method: session</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,389 - INFO - 🎯 Default action: unenrol</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,390 - INFO - 🔍 Filter actions: both</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,390 - INFO - 📝 Log file: moodle_enroll_20260303_112322.log</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,390 - INFO - ================================================================================</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,391 - ERROR - File not found: c:\Users\preggyr\Documents\unenrol_moodle.csv</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,313 - INFO - 📦 Batch Size: 500</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,314 - INFO - ⚙️  Workers: 4</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,314 - INFO - 🔧 Mode: LIVE</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,315 - INFO - 👤 Create missing users: True</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,315 - INFO - 🚫 Excluded courses: None</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,315 - INFO - 🔄 Deduplication method: session</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,316 - INFO - 🎯 Default action: enrol</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,316 - INFO - 🔍 Filter actions: both</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,316 - INFO - 📝 Log file: moodle_enroll_20260303_111609.log</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,317 - INFO - ================================================================================</div></div>
                     </div>
                 </div>
             </div>
         </div>
-
+        
+        <!-- Footer -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-body text-center text-muted">
-                        <small>Generated by Enrollment Monitor Script</small>
+                    <div class="card-body text-center text-muted small">
+                        Generated by Enhanced Enrollment Monitor | 
+                        Scanning 33 log files in 5 directories |
+                        2026-03-09 08:23:42
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

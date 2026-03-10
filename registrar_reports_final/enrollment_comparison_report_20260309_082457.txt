@@ -1,0 +1,32 @@
+====================================================================================================
+ENROLLMENT COMPARISON REPORT
+Durban University of Technology
+Generated: 2026-03-09 08:24:57
+====================================================================================================
+
+EXECUTIVE SUMMARY
+--------------------------------------------------
+PeopleSoft contains 30,136 unique students with 145,836 enrollments
+Moodle contains 43,894 unique students with 287,782 enrollments
+Student sync completion: 145.7%
+Enrollment sync completion: 197.3%
+
+KEY FINDINGS
+--------------------------------------------------
+• Students in both systems: 0
+• Students only in PeopleSoft: 30,136
+• Students only in Moodle: 43,894
+• Enrollments in both systems: 0
+• Enrollments only in PeopleSoft: 145,836
+• Enrollments only in Moodle: 280,204
+
+RECOMMENDATIONS
+--------------------------------------------------
+• Add 30,136 PeopleSoft students to Moodle
+• Review 43,894 Moodle students not in PeopleSoft (possibly from previous years)
+• Complete 145,836 missing enrollments in Moodle
+• Create 3,690 missing courses in Moodle
+
+====================================================================================================
+END OF REPORT
+====================================================================================================

@@ -19,6 +19,8 @@
         .log-pipeline { border-left-color: #007bff; background-color: #f0f7ff; }
         .log-enroll { border-left-color: #28a745; background-color: #f0fff0; }
         .log-wrapper { border-left-color: #ffc107; background-color: #fff8e0; }
+        .log-purge { border-left-color: #dc3545; background-color: #fff0f0; }
+        .log-course_creation { border-left-color: #6f42c1; background-color: #f6f0ff; }
     </style>
 </head>
 <body>
@@ -30,13 +32,13 @@
                     <div class="card-body">
                         <h1 class="text-center">
                             🎓 Moodle Enrollment System Monitor
-                            <span class="badge bg-secondary ms-2">
-                                INACTIVE
+                            <span class="badge bg-success ms-2">
+                                HEALTHY
                             </span>
                         </h1>
                         <p class="text-center text-muted">
-                            Last activity: 2026-03-05 10:56:07 |
-                            Generated: 2026-03-09 08:23:42
+                            Last activity: 2026-07-23 14:24:29 |
+                            Generated: 2026-07-24 09:27:37
                         </p>
                     </div>
                 </div>
@@ -49,7 +51,7 @@
                 <div class="card metric-card">
                     <div class="card-body text-center">
                         <h5 class="text-muted">Last 24h Enrollments</h5>
-                        <h2 class="text-primary">0</h2>
+                        <h2 class="text-primary">310,064</h2>
                         <small>Total records processed</small>
                     </div>
                 </div>
@@ -58,8 +60,8 @@
                 <div class="card metric-card">
                     <div class="card-body text-center">
                         <h5 class="text-muted">Successful</h5>
-                        <h2 class="text-success">0</h2>
-                        <small>0.0% success rate</small>
+                        <h2 class="text-success">264,044</h2>
+                        <small>85.2% success rate</small>
                     </div>
                 </div>
             </div>
@@ -87,22 +89,11 @@
                 <div class="col-md-3 mb-3">
                     <div class="card">
                         <div class="card-body text-center">
-                            <h6 class="text-muted">WRAPPER</h6>
-                            <h3>3</h3>
-                            <small>Files</small>
-                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 10:56:07</small></p>
-                            <p><small class="text-muted">Total: 0 KB</small></p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card">
-                        <div class="card-body text-center">
                             <h6 class="text-muted">ENROLL</h6>
-                            <h3>17</h3>
+                            <h3>43</h3>
                             <small>Files</small>
-                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 13:50:55</small></p>
-                            <p><small class="text-muted">Total: 223 KB</small></p>
+                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 14:24:29</small></p>
+                            <p><small class="text-muted">Total: 691 KB</small></p>
                         </div>
                     </div>
                 </div>
@@ -110,10 +101,21 @@
                     <div class="card">
                         <div class="card-body text-center">
                             <h6 class="text-muted">RESULTS</h6>
-                            <h3>12</h3>
+                            <h3>27</h3>
                             <small>Files</small>
-                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 13:50:55</small></p>
-                            <p><small class="text-muted">Total: 4 KB</small></p>
+                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 14:24:29</small></p>
+                            <p><small class="text-muted">Total: 12 KB</small></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">WRAPPER</h6>
+                            <h3>9</h3>
+                            <small>Files</small>
+                            <p class="mt-2 mb-0"><small class="text-muted">Latest: 09:12:48</small></p>
+                            <p><small class="text-muted">Total: 0 KB</small></p>
                         </div>
                     </div>
                 </div>
@@ -136,11 +138,66 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">✅ Recent Enrollment Operations (Last 24h)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>File</th>
+                                        <th>Records</th>
+                                        <th>Success</th>
+                                        <th>Errors</th>
+                                        <th>Users Found</th>
+                                        <th>Users Missing</th>
+                                        <th>Courses Found</th>
+                                        <th>Users Created</th>
+                                        <th>Mode</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>14:24:29</td>
+                                        <td><small>enrollment_results_20260723_14</small></td>
+                                        <td class="text-center">155,032</td>
+                                        <td class="text-success text-center">148,884</td>
+                                        <td class="text-danger text-center">0</td>
+                                        <td class="text-center">34,445</td>
+                                        <td class="text-center text-warning">69</td>
+                                        <td class="text-center">1,586</td>
+                                        <td class="text-center">0</td>
+                                        <td><span class="badge bg-success">LIVE</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>10:46:51</td>
+                                        <td><small>enrollment_results_20260723_10</small></td>
+                                        <td class="text-center">155,032</td>
+                                        <td class="text-success text-center">115,160</td>
+                                        <td class="text-danger text-center">0</td>
+                                        <td class="text-center">27,302</td>
+                                        <td class="text-center text-warning">7,212</td>
+                                        <td class="text-center">1,585</td>
+                                        <td class="text-center">0</td>
+                                        <td><span class="badge bg-success">LIVE</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
                     <div class="card-header bg-secondary text-white">
                         <h5 class="mb-0">📝 Recent Activity (All Logs)</h5>
                     </div>
                     <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                        <div class="list-group list-group-flush"><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,625 - INFO -   Progress: 133,946/145,836 (91.8%) @ 34 enrollments/sec</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,626 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 📊 PARALLEL PROCESSING COMPLETE:</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,626 - INFO -   ✅ Successful: 133,946</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,627 - INFO -   ❌ Failed: 0</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,627 - INFO -   ⏭️ Skipped: 11,890</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,628 - INFO -   ⏱️ Time: 3897.4 seconds (37/sec)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,661 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 📁 Results saved to: enrollment_results_20260303_135055.json</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112449.log"><span class="text-muted">[13:50:55]</span> 2026-03-03 13:50:55,664 - INFO - 📝 Log saved to: moodle_enroll_20260303_112449.log</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "excluded_courses": [],</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "deduplication_method": "session",</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "users_created": 0,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "successful_operations": 133946,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "failed_operations": 0,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "dry_run": false,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "batch_size": 500,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "workers": 4,</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> "parallel": true</div><div class="log-entry log-results small" title="enrollment_results_20260303_135055.json"><span class="text-muted">[13:50:55]</span> }</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:38:57,951 - INFO -   ✓ Batch 112/118: 498 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:39:15,185 - INFO -   ✓ Batch 113/118: 499 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:39:28,854 - ERROR - API Error: Error writing to database</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:39:28,864 - INFO -   ✓ Batch 118/118: 345 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:39:43,238 - WARNING - Timeout, retrying in 1.8s (attempt 1/3)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:40:11,669 - INFO -   ✓ Batch 114/118: 496 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:40:20,867 - WARNING - Timeout, retrying in 1.2s (attempt 1/3)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:40:48,544 - INFO -   ✓ Batch 116/118: 498 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:40:58,468 - WARNING - Timeout, retrying in 1.5s (attempt 1/3)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112414.log"><span class="text-muted">[13:41:29]</span> 2026-03-03 13:41:29,069 - INFO -   ✓ Batch 117/118: 500 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,387 - INFO - ⚙️  Workers: 4</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,388 - INFO - 🔧 Mode: LIVE</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,388 - INFO - 👤 Create missing users: True</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,389 - INFO - 🚫 Excluded courses: None</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,389 - INFO - 🔄 Deduplication method: session</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,389 - INFO - 🎯 Default action: unenrol</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,390 - INFO - 🔍 Filter actions: both</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,390 - INFO - 📝 Log file: moodle_enroll_20260303_112322.log</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,390 - INFO - ================================================================================</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_112322.log"><span class="text-muted">[11:23:22]</span> 2026-03-03 11:23:22,391 - ERROR - File not found: c:\Users\preggyr\Documents\unenrol_moodle.csv</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,313 - INFO - 📦 Batch Size: 500</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,314 - INFO - ⚙️  Workers: 4</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,314 - INFO - 🔧 Mode: LIVE</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,315 - INFO - 👤 Create missing users: True</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,315 - INFO - 🚫 Excluded courses: None</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,315 - INFO - 🔄 Deduplication method: session</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,316 - INFO - 🎯 Default action: enrol</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,316 - INFO - 🔍 Filter actions: both</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,316 - INFO - 📝 Log file: moodle_enroll_20260303_111609.log</div><div class="log-entry log-enroll small" title="moodle_enroll_20260303_111609.log"><span class="text-muted">[11:16:09]</span> 2026-03-03 11:16:09,317 - INFO - ================================================================================</div></div>
+                        <div class="list-group list-group-flush"><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 2026-07-23 14:24:29,607 - INFO -   ✓ Batch 301/311: 417 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 2026-07-23 14:24:29,609 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 📊 PARALLEL PROCESSING COMPLETE:</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 2026-07-23 14:24:29,610 - INFO -   ✅ Successful: 148,884</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 2026-07-23 14:24:29,610 - INFO -   ❌ Failed: 0</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 2026-07-23 14:24:29,610 - INFO -   ⏭️ Skipped: 6,148</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 2026-07-23 14:24:29,610 - INFO -   ⏱️ Time: 10189.6 seconds (15/sec)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 2026-07-23 14:24:29,634 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 📁 Results saved to: enrollment_results_20260723_142429.json</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_105847.log"><span class="text-muted">[14:24:29]</span> 2026-07-23 14:24:29,634 - INFO - 📝 Log saved to: moodle_enroll_20260723_105847.log</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "excluded_courses": [],</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "deduplication_method": "session",</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "users_created": 0,</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "successful_operations": 148884,</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "failed_operations": 0,</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "dry_run": false,</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "batch_size": 500,</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "workers": 4,</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> "parallel": true</div><div class="log-entry log-results small" title="enrollment_results_20260723_142429.json"><span class="text-muted">[14:24:29]</span> }</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 2026-07-23 10:46:51,065 - INFO -   ✓ Batch 158/311: 486 completed</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 2026-07-23 10:46:51,067 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 📊 PARALLEL PROCESSING COMPLETE:</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 2026-07-23 10:46:51,068 - INFO -   ✅ Successful: 115,160</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 2026-07-23 10:46:51,068 - INFO -   ❌ Failed: 0</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 2026-07-23 10:46:51,069 - INFO -   ⏭️ Skipped: 39,872</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 2026-07-23 10:46:51,069 - INFO -   ⏱️ Time: 4387.9 seconds (35/sec)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 2026-07-23 10:46:51,118 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 📁 Results saved to: enrollment_results_20260723_104651.json</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_085823.log"><span class="text-muted">[10:46:51]</span> 2026-07-23 10:46:51,128 - INFO - 📝 Log saved to: moodle_enroll_20260723_085823.log</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "excluded_courses": [],</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "deduplication_method": "session",</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "users_created": 0,</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "successful_operations": 115160,</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "failed_operations": 0,</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "dry_run": false,</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "batch_size": 500,</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "workers": 4,</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> "parallel": true</div><div class="log-entry log-results small" title="enrollment_results_20260723_104651.json"><span class="text-muted">[10:46:51]</span> }</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 2026-07-23 08:45:30,457 - INFO - Prepared 84 unenrolments (0 skipped)</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 2026-07-23 08:45:30,457 - INFO -   Batch 1/1 (84 unenrolments)...</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 2026-07-23 08:46:08,277 - INFO -     ✓ Batch 1 complete</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 2026-07-23 08:46:08,278 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 📊 SUMMARY:</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 2026-07-23 08:46:08,278 - INFO -   ✅ Successful: 84</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 2026-07-23 08:46:08,279 - INFO -   ❌ Failed: 0</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 2026-07-23 08:46:08,283 - INFO -</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 📁 Results saved to: enrollment_results_20260723_084608.json</div><div class="log-entry log-enroll small" title="moodle_enroll_20260723_084511.log"><span class="text-muted">[08:46:08]</span> 2026-07-23 08:46:08,283 - INFO - 📝 Log saved to: moodle_enroll_20260723_084511.log</div></div>
                     </div>
                 </div>
             </div>
@@ -152,8 +209,8 @@
                 <div class="card">
                     <div class="card-body text-center text-muted small">
                         Generated by Enhanced Enrollment Monitor | 
-                        Scanning 33 log files in 5 directories |
-                        2026-03-09 08:23:42
+                        Scanning 80 log files in 5 directories |
+                        2026-07-24 09:27:37
                     </div>
                 </div>
             </div>

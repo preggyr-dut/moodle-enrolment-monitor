@@ -14,6 +14,11 @@ import glob
 from datetime import datetime, timedelta
 from pathlib import Path
 import json
+import sys
+
+# Force UTF-8 output to fix Windows console crashes
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 class EnrollmentMonitor:
     def __init__(self, log_dirs=None, output_dir='.'):
@@ -46,7 +51,9 @@ class EnrollmentMonitor:
             'enroll': 'moodle_enroll_*.log',
             'sync': 'enrolment_sync.log',
             'simple': 'simple_enroll.log',
-            'results': 'enrollment_results_*.json'
+            'results': 'enrollment_results_*.json',
+            'purge': 'purge_users_*.log',
+            'course_creation': 'course_creation_*.log'
         }
         
         # Find all logs
@@ -275,6 +282,8 @@ class EnrollmentMonitor:
         .log-pipeline {{ border-left-color: #007bff; background-color: #f0f7ff; }}
         .log-enroll {{ border-left-color: #28a745; background-color: #f0fff0; }}
         .log-wrapper {{ border-left-color: #ffc107; background-color: #fff8e0; }}
+        .log-purge {{ border-left-color: #dc3545; background-color: #fff0f0; }}
+        .log-course_creation {{ border-left-color: #6f42c1; background-color: #f6f0ff; }}
     </style>
 </head>
 <body>
@@ -542,7 +551,9 @@ class EnrollmentMonitor:
                 'enroll': 'log-enroll',
                 'wrapper': 'log-wrapper',
                 'results': 'log-results',
-                'sync': 'log-sync'
+                'sync': 'log-sync',
+                'purge': 'log-purge',
+                'course_creation': 'log-course_creation'
             }.get(entry['type'], '')
             
             html += f'<div class="log-entry {type_class} small" title="{entry["file"]}"><span class="text-muted">[{entry["time"].strftime("%H:%M:%S")}]</span> {line}</div>'

@@ -64,7 +64,7 @@ def setup_github_repo(repo_url, site_dir='monitoring_site'):
 
     return True
 
-def update_and_push(site_dir='monitoring_site'):
+def update_and_push(site_dir='.'):
     """Update the dashboard and push changes."""
     site_path = Path(site_dir)
 

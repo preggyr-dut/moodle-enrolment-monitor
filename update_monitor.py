@@ -10,7 +10,7 @@ from pathlib import Path
 def run_command(command, cwd=None):
     """Run a shell command."""
     try:
-        result = subprocess.run(command, shell=True, cwd=cwd, check=True, capture_output=True, text=True)
+        result = subprocess.run(command, shell=True, cwd=cwd, check=True, capture_output=True, text=True, encoding='utf-8')
         return True
     except subprocess.CalledProcessError as e:
         print(f"Command failed: {command}")
